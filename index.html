@@ -45,13 +45,14 @@
     .bg-rain { background: radial-gradient(circle at top, #1d4ed8, #020617 60%); }
     .bg-snow { background: radial-gradient(circle at top, #e5e7eb, #0f172a 60%); }
     .bg-mist { background: radial-gradient(circle at top, #6b7280, #020617 60%); }
+.top-bar {
+  position: static;   /* ya simply remove position */
+  padding: 16px 5vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    .top-bar {
-      padding: 16px 5vw;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
 
     .brand {
       display: flex;
@@ -172,13 +173,22 @@
     }
 
     .glass {
-      background: rgba(15,23,42,0.75);
-      border-radius: 20px;
-      border: 1px solid rgba(148,163,184,0.6);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 18px 40px rgba(15,23,42,0.8);
-      padding: 16px 18px;
-    }
+  background: rgba(15,23,42,0.75);
+  border-radius: 22px;
+  border: 1px solid rgba(148,163,184,0.6);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 0 20px rgba(99,102,241,0.3),
+              0 20px 40px rgba(15,23,42,0.8);
+  padding: 18px 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 0 35px rgba(236,72,153,0.6),
+              0 25px 50px rgba(15,23,42,0.9);
+}
+
 
     .app.light .glass {
       background: rgba(255,255,255,0.9);
@@ -208,6 +218,14 @@
       align-items: center;
       justify-content: center;
     }
+
+    .current-temp {
+  font-size: 56px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
     .current-icon {
       width: 120px;
@@ -348,6 +366,82 @@
       .current-temp { font-size: 44px; }
       .current-city { font-size: 20px; }
     }
+    .btn.primary:hover {
+  box-shadow: 0 0 15px #6366f1, 0 0 30px #ec4899;
+}
+
+.btn.outline:hover, .btn.ghost:hover {
+  box-shadow: 0 0 12px rgba(99,102,241,0.7);
+}
+.forecast-card, .hour-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.forecast-card:hover, .hour-card:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(99,102,241,0.5);
+}
+.glass {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #6366f1, #ec4899, #22c55e);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.25);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+.app::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.06) 0, transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(255,255,255,0.05) 0, transparent 45%);
+  animation: moveBg 20s linear infinite;
+  z-index: -1;
+}
+
+@keyframes moveBg {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-200px); }
+}
+.pulse {
+  animation: pulseAnim 0.6s ease;
+}
+
+@keyframes pulseAnim {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
   </style>
 </head>
 <body class="app bg-clouds">
@@ -362,12 +456,14 @@
   </header>
 
   <section class="controls">
-    <div class="search-group">
-      <input id="cityInput" type="text" placeholder="Search city (e.g. Delhi, London, Mumbai)" />
-      <button class="btn primary" id="searchBtn">Search</button>
-    </div>
-    <button class="btn outline" id="locBtn">📍 Use my location</button>
-  </section>
+  <div class="search-group">
+    <input id="cityInput" type="text" placeholder="Search city..." />
+    <button class="btn primary" id="searchBtn">Search</button>
+    <button class="btn outline" id="locBtn">Use my location</button>
+    
+  </div>
+</section>
+
 
   <p class="error-banner hidden" id="errorBanner">❌ City not found or API error</p>
 
@@ -565,6 +661,11 @@ sunsetEl.textContent  = formatTime(sys.sunset, timezone);
       if (!one || !one.daily || !one.hourly) {
   loadFakeForecast();
 }
+document.querySelector(".current").classList.add("pulse");
+setTimeout(() => {
+  document.querySelector(".current").classList.remove("pulse");
+}, 600);
+
 
       // If API didn't return forecast, use fake data
 function loadFakeForecast() {
@@ -770,7 +871,71 @@ function loadFakeForecast() {
 
     // Default load: Delhi
     loadWeather(fetchCurrentByCity("Delhi"));
+    
   </script>
+  <script>
+/* ========== ADD-ON FEATURES (NO REMOVE) ========== */
+
+// 🎙️ Voice Search
+const voiceBtn = document.createElement("button");
+voiceBtn.className = "btn outline";
+voiceBtn.innerText = "🎙️";
+document.querySelector(".search-group").appendChild(voiceBtn);
+
+if ("webkitSpeechRecognition" in window) {
+  const rec = new webkitSpeechRecognition();
+  rec.lang = "en-IN";
+  voiceBtn.onclick = () => rec.start();
+  rec.onresult = e => {
+    const city = e.results[0][0].transcript;
+    cityInput.value = city;
+    loadWeather(fetchCurrentByCity(city));
+  };
+}
+</script>
+<script>
+// ⭐ Favorites
+const favBtn = document.createElement("button");
+favBtn.className = "btn ghost";
+favBtn.innerText = "⭐ Favorite";
+document.querySelector(".current").appendChild(favBtn);
+
+const favBox = document.createElement("div");
+document.querySelector(".current").appendChild(favBox);
+
+let favs = JSON.parse(localStorage.getItem("favs") || "[]");
+
+function renderFavs(){
+  favBox.innerHTML = "";
+  favs.forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "btn ghost";
+    b.innerText = c;
+    b.onclick = ()=> loadWeather(fetchCurrentByCity(c));
+    favBox.appendChild(b);
+  });
+}
+renderFavs();
+
+favBtn.onclick = ()=>{
+  const c = currentCity.textContent;
+  if(c && c !== "City" && !favs.includes(c)){
+    favs.push(c);
+    localStorage.setItem("favs", JSON.stringify(favs));
+    renderFavs();
+  }
+};
+</script>
+<script>
+// 🔄 Auto refresh
+setInterval(()=>{
+  const c = currentCity.textContent;
+  if(c && c !== "City"){
+    loadWeather(fetchCurrentByCity(c));
+  }
+}, 300000);
+</script>
+
   <script src="script.js"></script>
 
 </body>
