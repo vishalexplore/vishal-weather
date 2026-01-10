@@ -1,5 +1,4 @@
-const API_KEY = "YOUR_API_KEY_HERE"
-
+const API_KEY = "f0377fdf28a6b842a29fcae83354d412"
 const BASE_URL = "https://api.openweathermap.org/data/2.5"
 const GEO_URL = "https://api.openweathermap.org/geo/1.0"
 
