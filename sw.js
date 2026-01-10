@@ -1,4 +1,5 @@
-const CACHE_NAME = "weather-app-v1"
+const CACHE_NAME = "weather-app-v999";
+
 const urlsToCache = ["/", "/index.html", "/styles.css", "/script.js", "/manifest.json"]
 
 // Install event
