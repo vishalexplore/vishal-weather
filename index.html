@@ -1,942 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="manifest.json">
-
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vishal Weather Dashboard</title>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6YLE32ER01"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-6YLE32ER01');
-</script>
-  <!-- Chart.js for graph -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", system-ui, sans-serif;
-    }
-
-    .app {
-      min-height: 100vh;
-      width: 100%;
-      background: radial-gradient(circle at top, #111827, #020617 60%);
-      color: #e5e7eb;
-      transition: background 0.4s ease, color 0.4s ease;
-      padding-bottom: 40px;
-    }
-
-    .app.light {
-      background: linear-gradient(135deg, #dbeafe, #fee2ff);
-      color: #0f172a;
-    }
-
-    /* Weather background modifiers */
-    .bg-clear { background: radial-gradient(circle at top, #22c55e, #020617 60%); }
-    .bg-clouds { background: radial-gradient(circle at top, #64748b, #020617 60%); }
-    .bg-rain { background: radial-gradient(circle at top, #1d4ed8, #020617 60%); }
-    .bg-snow { background: radial-gradient(circle at top, #e5e7eb, #0f172a 60%); }
-    .bg-mist { background: radial-gradient(circle at top, #6b7280, #020617 60%); }
-.top-bar {
-  position: static;   /* ya simply remove position */
-  padding: 16px 5vw;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-
-    .brand {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      font-size: 22px;
-      font-weight: 700;
-    }
-
-    .logo-icon { font-size: 26px; }
-
-    .btn {
-      border: none;
-      cursor: pointer;
-      border-radius: 999px;
-      padding: 9px 16px;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: 0.2s ease;
-    }
-
-    .btn.primary {
-      background: linear-gradient(135deg, #6366f1, #ec4899);
-      color: #fff;
-      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
-    }
-
-    .btn.outline {
-      border: 1px solid rgba(148,163,184,0.7);
-      background: rgba(15,23,42,0.6);
-      color: inherit;
-    }
-
-    .btn.ghost {
-      background: rgba(15,23,42,0.6);
-      color: inherit;
-    }
-
-    .app.light .btn.outline,
-    .app.light .btn.ghost {
-      background: rgba(255,255,255,0.85);
-    }
-
-    .btn:hover { opacity: 0.9; }
-
-    .controls {
-      padding: 0 5vw;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .search-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .search-group input {
-      min-width: 230px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: rgba(15,23,42,0.7);
-      color: inherit;
-      outline: none;
-      font-size: 14px;
-    }
-
-    .app.light .search-group input {
-      background: rgba(255,255,255,0.9);
-    }
-
-    .error-banner {
-      margin: 8px 5vw;
-      padding: 8px 12px;
-      background: rgba(248,113,113,0.18);
-      border: 1px solid rgba(248,113,113,0.6);
-      border-radius: 10px;
-      font-size: 13px;
-    }
-
-    .hidden { display: none !important; }
-
-    .loader {
-      margin: 8px 5vw;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      font-size: 13px;
-    }
-
-    .spinner {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      border: 3px solid rgba(148,163,184,0.4);
-      border-top-color: #6366f1;
-      animation: spin 0.7s linear infinite;
-    }
-
-    .layout {
-      margin-top: 18px;
-      padding: 0 5vw;
-      display: grid;
-      grid-template-columns: minmax(0,1.7fr) minmax(0,1.3fr);
-      gap: 16px;
-    }
-
-    @media (max-width: 900px) {
-      .layout { grid-template-columns: minmax(0,1fr); }
-    }
-
-    .glass {
-  background: rgba(15,23,42,0.75);
-  border-radius: 22px;
-  border: 1px solid rgba(148,163,184,0.6);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 0 20px rgba(99,102,241,0.3),
-              0 20px 40px rgba(15,23,42,0.8);
-  padding: 18px 20px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.glass:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 0 35px rgba(236,72,153,0.6),
-              0 25px 50px rgba(15,23,42,0.9);
-}
-
-
-    .app.light .glass {
-      background: rgba(255,255,255,0.9);
-      border-color: rgba(148,163,184,0.5);
-      box-shadow: 0 18px 30px rgba(148,163,184,0.6);
-    }
-
-    .current {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .current-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .current-temp { font-size: 52px; font-weight: 700; }
-    .current-city { font-size: 24px; font-weight: 600; }
-    .current-desc { font-size: 14px; text-transform: capitalize; }
-    .current-feels { font-size: 13px; }
-
-    .current-icon-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .current-temp {
-  font-size: 56px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #60a5fa, #f472b6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-    .current-icon {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-      filter: drop-shadow(0 18px 30px rgba(0,0,0,0.6));
-      animation: float 3s ease-in-out infinite;
-    }
-
-    .current-meta {
-      font-size: 12px;
-      opacity: 0.9;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .side-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-    }
-
-    .stat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      text-align: center;
-    }
-
-    .stat span:first-child {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-
-    .stat span:last-child {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .sun {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-    }
-
-    .chart {
-      height: 210px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 13px;
-    }
-
-    .forecast-section {
-      margin: 14px 5vw 0;
-    }
-
-    .forecast-section h3 {
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-
-    .forecast-grid {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(90px, 1fr);
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .hourly-strip {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .forecast-grid::-webkit-scrollbar,
-    .hourly-strip::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .forecast-grid::-webkit-scrollbar-thumb,
-    .hourly-strip::-webkit-scrollbar-thumb {
-      background: rgba(148,163,184,0.9);
-      border-radius: 999px;
-    }
-
-    .forecast-card,
-    .hour-card {
-      text-align: center;
-      border-radius: 14px;
-      padding: 8px 6px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.6);
-      font-size: 12px;
-    }
-
-    .app.light .forecast-card,
-    .app.light .hour-card {
-      background: rgba(248,250,252,0.95);
-    }
-
-    .forecast-card img,
-    .hour-card img {
-      width: 30px;
-      height: 30px;
-    }
-
-    .footer {
-      margin-top: 16px;
-      text-align: center;
-      font-size: 12px;
-      opacity: 0.85;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
-    @media (max-width: 640px) {
-      .glass { padding: 14px 12px; }
-      .current-temp { font-size: 44px; }
-      .current-city { font-size: 20px; }
-    }
-    .btn.primary:hover {
-  box-shadow: 0 0 15px #6366f1, 0 0 30px #ec4899;
-}
-
-.btn.outline:hover, .btn.ghost:hover {
-  box-shadow: 0 0 12px rgba(99,102,241,0.7);
-}
-.forecast-card, .hour-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.forecast-card:hover, .hour-card:hover {
-  transform: translateY(-6px) scale(1.05);
-  box-shadow: 0 10px 25px rgba(99,102,241,0.5);
-}
-.glass {
-  position: relative;
-  overflow: hidden;
-}
-
-.glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, #6366f1, #ec4899, #22c55e);
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events: none;
-}
-.btn {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.25);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.btn:hover::after {
-  opacity: 1;
-}
-.app::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.06) 0, transparent 40%),
-    radial-gradient(circle at 80% 60%, rgba(255,255,255,0.05) 0, transparent 45%);
-  animation: moveBg 20s linear infinite;
-  z-index: -1;
-}
-
-@keyframes moveBg {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-200px); }
-}
-.pulse {
-  animation: pulseAnim 0.6s ease;
-}
-
-@keyframes pulseAnim {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - Advanced Forecast</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="description" content="Advanced weather app with detailed forecasts, hourly updates, and weather alerts">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192?text=Weather+App+Icon">
 </head>
-<body class="app bg-clouds">
-  <header class="top-bar">
-    <div class="brand">
-      <span class="logo-icon">☁️</span>
-      <span class="logo-text">Vishal Weather</span>
+<body>
+    <!-- Background Animation -->
+    <div class="weather-bg" id="weatherBg">
+        <div class="weather-particles" id="weatherParticles"></div>
     </div>
-    <button class="btn ghost" id="themeToggle" title="Toggle theme">
-      <span id="themeIcon">🌙</span>
-    </button>
-  </header>
 
-  <section class="controls">
-  <div class="search-group">
-    <input id="cityInput" type="text" placeholder="Search city..." />
-    <button class="btn primary" id="searchBtn">Search</button>
-    <button class="btn outline" id="locBtn">Use my location</button>
-    
-  </div>
-</section>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <img src="https://placehold.co/48x48?text=V" alt="Weather app logo icon" class="logo-icon">
+                <h1>V-WeatherPro</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="refreshBtn" title="Refresh">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                </button>
+                <button class="btn-icon" id="settingsBtn" title="Settings">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6m5.2-13.2L14 9m-4 6l-3.2 3.2M23 12h-6m-6 0H1m18.2 5.2L16 14m-8-4l-3.2-3.2"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
 
-
-  <p class="error-banner hidden" id="errorBanner">❌ City not found or API error</p>
-
-  <div class="loader hidden" id="loader">
-    <div class="spinner"></div>
-    <p>Fetching weather...</p>
-  </div>
-
-  <main class="layout">
-    <section class="current glass">
-      <div class="current-header">
-        <div>
-          <h1 class="current-temp" id="currentTemp">--°C</h1>
-          <h2 class="current-city" id="currentCity">City</h2>
-          <p class="current-desc" id="currentDesc">Condition</p>
-          <p class="current-feels" id="currentFeels">Feels like --°C</p>
-          <div class="current-meta">
-            <p id="localTime">Local time: --</p>
-            <p id="countryCode">Country: --</p>
-          </div>
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search for a city...">
+                <!-- Added mic button for voice search -->
+                <button class="btn-mic" id="micBtn" title="Voice search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+                <button class="btn-location" id="locationBtn" title="Use current location">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="search-suggestions" id="searchSuggestions"></div>
         </div>
-        <div class="current-icon-wrap">
-          <img id="currentIcon" class="current-icon" alt="Weather Icon" />
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
         </div>
-      </div>
-    </section>
 
-    <section class="side-panel">
-      <div class="stats glass">
-        <div class="stat">
-          <span>Humidity</span>
-          <span id="humidity">--%</span>
+        <!-- Error State -->
+        <div class="error" id="error" style="display: none;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p id="errorMessage">Unable to fetch weather data</p>
+            <button class="btn-primary" onclick="location.reload()">Try Again</button>
         </div>
-        <div class="stat">
-          <span>Wind</span>
-          <span id="wind">-- km/h</span>
+
+        <!-- Weather Content -->
+        <div class="weather-content" id="weatherContent" style="display: none;">
+            <!-- Current Weather Card -->
+            <div class="current-weather card fade-in">
+                <div class="location-info">
+                    <h2 id="cityName">Loading...</h2>
+                    <p id="currentDate">Loading...</p>
+                </div>
+                
+                <div class="weather-main">
+                    <div class="weather-icon-large" id="weatherIconLarge">
+                        <img src="https://placehold.co/150x150?text=Weather+Icon" alt="Current weather icon showing weather conditions" id="mainWeatherIcon">
+                    </div>
+                    <div class="temperature-main">
+                        <div class="temp-display">
+                            <span class="temp-value" id="tempValue">--</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <p class="weather-description" id="weatherDescription">Loading...</p>
+                        <p class="feels-like">Feels like <span id="feelsLike">--</span>°C</p>
+                    </div>
+                </div>
+
+                <div class="weather-details-grid">
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">Humidity</span>
+                            <span class="detail-value" id="humidity">--%</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">Wind Speed</span>
+                            <span class="detail-value" id="windSpeed">-- km/h</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">Pressure</span>
+                            <span class="detail-value" id="pressure">-- hPa</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">Visibility</span>
+                            <span class="detail-value" id="visibility">-- km</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">UV Index</span>
+                            <span class="detail-value" id="uvIndex">--</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 16l-4-4-4 4"/>
+                        </svg>
+                        <div class="detail-content">
+                            <span class="detail-label">Cloudiness</span>
+                            <span class="detail-value" id="cloudiness">--%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Added Temperature Graph Card -->
+            <div class="temperature-graph card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    Temperature Trend
+                </h3>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+
+            <!-- Sun Info Card -->
+            <div class="sun-info card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    Sun & Moon
+                </h3>
+                <div class="sun-grid">
+                    <div class="sun-item">
+                        <div class="sun-icon sunrise">🌅</div>
+                        <span class="sun-label">Sunrise</span>
+                        <span class="sun-time" id="sunrise">--:--</span>
+                    </div>
+                    <div class="sun-item">
+                        <div class="sun-icon sunset">🌇</div>
+                        <span class="sun-label">Sunset</span>
+                        <span class="sun-time" id="sunset">--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hourly Forecast Card -->
+            <div class="hourly-forecast card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Hourly Forecast
+                </h3>
+                <div class="hourly-scroll" id="hourlyForecast">
+                    <!-- Hourly items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- 7-Day Forecast Card -->
+            <div class="forecast-card card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    7-Day Forecast
+                </h3>
+                <div class="forecast-list" id="forecastList">
+                    <!-- Forecast items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Enhanced Air Quality Card with detailed breakdown and graph -->
+            <div class="air-quality card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2"/>
+                    </svg>
+                    Air Quality Index
+                </h3>
+                <div class="aqi-main">
+                    <div class="aqi-circle" id="aqiCircle">
+                        <div class="aqi-value" id="aqiValue">--</div>
+                        <div class="aqi-label" id="aqiLabel">Loading...</div>
+                    </div>
+                    <div class="aqi-description" id="aqiDescription">
+                        <p id="aqiDetailText">Checking air quality...</p>
+                    </div>
+                </div>
+                <div class="aqi-components" id="aqiComponents">
+                    <!-- Air quality components will be inserted here -->
+                </div>
+                <div class="aqi-chart">
+                    <canvas id="aqiChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Added Weather Alerts Card -->
+            <div class="weather-alerts card fade-in" id="weatherAlertsCard" style="display: none;">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Weather Alerts
+                </h3>
+                <div id="alertsContent"></div>
+            </div>
+
+            <!-- Added Weather Statistics Card -->
+            <div class="weather-stats card fade-in">
+                <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="20" x2="12" y2="10"/>
+                        <line x1="18" y1="20" x2="18" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="16"/>
+                    </svg>
+                    Weather Statistics
+                </h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">🌡️</div>
+                        <div class="stat-content">
+                            <span class="stat-label">High / Low</span>
+                            <span class="stat-value" id="statHighLow">-- / --</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💨</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Wind Direction</span>
+                            <span class="stat-value" id="statWindDir">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💧</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Dew Point</span>
+                            <span class="stat-value" id="statDewPoint">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">☔</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Precipitation</span>
+                            <span class="stat-value" id="statPrecip">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stat">
-          <span>Pressure</span>
-          <span id="pressure">-- hPa</span>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="btn-close" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label for="tempUnit">Temperature Unit</label>
+                    <select id="tempUnit" class="setting-select">
+                        <option value="metric">Celsius (°C)</option>
+                        <option value="imperial">Fahrenheit (°F)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="windUnit">Wind Speed Unit</label>
+                    <select id="windUnit" class="setting-select">
+                        <option value="kmh">Kilometers per hour (km/h)</option>
+                        <option value="mph">Miles per hour (mph)</option>
+                        <option value="ms">Meters per second (m/s)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="autoRefresh" checked>
+                        Auto-refresh data (every 10 minutes)
+                    </label>
+                </div>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <div class="sun glass">
-        <p>Sunrise: <span id="sunrise">--:--</span></p>
-        <p>Sunset: <span id="sunset">--:--</span></p>
-      </div>
+    <!-- Added Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>Made with ❤️ by Vishal</p>
+            <p class="footer-info">Weather data provided by OpenWeatherMap</p>
+        </div>
+    </footer>
 
-      <div class="chart glass">
-        <p>Temperature – 7 Days</p>
-        <canvas id="tempChart"></canvas>
-      </div>
-    </section>
-  </main>
-
-  <section class="forecast-section glass">
-    <h3>7-Day Forecast</h3>
-    <div class="forecast-grid" id="dailyForecast"></div>
-  </section>
-
-  <section class="forecast-section glass">
-    <h3>Next 12 Hours</h3>
-    <div class="hourly-strip" id="hourlyForecast"></div>
-  </section>
-
-  <footer class="footer">
-    Made with ❤️ by Vishal •
-  </footer>
-
-  <script>
-    // 🔑 Your API key
-    const API_KEY = "f0377fdf28a6b842a29fcae83354d412";
-
-    const CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather?units=metric&";
-    const ONECALL_URL = "https://api.openweathermap.org/data/2.5/onecall?units=metric&exclude=minutely,alerts&";
-
-    // DOM
-    const cityInput = document.getElementById("cityInput");
-    const searchBtn = document.getElementById("searchBtn");
-    const locBtn = document.getElementById("locBtn");
-    const errorBanner = document.getElementById("errorBanner");
-    const loader = document.getElementById("loader");
-    const themeToggle = document.getElementById("themeToggle");
-    const themeIcon = document.getElementById("themeIcon");
-
-    const currentTemp = document.getElementById("currentTemp");
-    const currentCity = document.getElementById("currentCity");
-    const currentDesc = document.getElementById("currentDesc");
-    const currentFeels = document.getElementById("currentFeels");
-    const currentIcon = document.getElementById("currentIcon");
-    const localTimeEl = document.getElementById("localTime");
-    const countryCodeEl = document.getElementById("countryCode");
-    const humidityEl = document.getElementById("humidity");
-    const windEl = document.getElementById("wind");
-    const pressureEl = document.getElementById("pressure");
-    const sunriseEl = document.getElementById("sunrise");
-    const sunsetEl = document.getElementById("sunset");
-    const dailyForecastEl = document.getElementById("dailyForecast");
-    const hourlyForecastEl = document.getElementById("hourlyForecast");
-
-    let tempChart;
-
-    // THEME
-    function setTheme(mode) {
-      document.body.classList.toggle("light", mode === "light");
-      themeIcon.textContent = mode === "light" ? "☀️" : "🌙";
-      localStorage.setItem("vishal_theme", mode);
-    }
-
-    (function initTheme() {
-      const saved = localStorage.getItem("vishal_theme") || "dark";
-      setTheme(saved);
-    })();
-
-    themeToggle.addEventListener("click", () => {
-      const isLight = document.body.classList.contains("light");
-      setTheme(isLight ? "dark" : "light");
-      if (tempChart) {
-        // re-render chart to adapt colors
-        tempChart.options.plugins.legend.labels.color = getComputedStyle(document.body).color;
-        tempChart.options.scales.x.ticks.color = getComputedStyle(document.body).color;
-        tempChart.options.scales.y.ticks.color = getComputedStyle(document.body).color;
-        tempChart.update();
-      }
-    });
-
-    // HELPERS
-    function showLoader(show) {
-      loader.classList.toggle("hidden", !show);
-    }
-
-    function showError(show, msg = "❌ City not found or API error") {
-      if (show) {
-        errorBanner.textContent = msg;
-        errorBanner.classList.remove("hidden");
-      } else {
-        errorBanner.classList.add("hidden");
-      }
-    }
-
-   function formatTime(ts, offset) {
-  return new Date(ts * 1000 + offset * 1000).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true
-  });
-}
-
-function formatFullTime(ts, offset) {
-  return new Date(ts * 1000 + offset * 1000).toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true
-  });
-}
-
-
-    function setBackground(main) {
-      const body = document.body;
-      body.classList.remove("bg-clear", "bg-clouds", "bg-rain", "bg-snow", "bg-mist");
-      const m = (main || "").toLowerCase();
-      if (m === "clear") body.classList.add("bg-clear");
-      else if (["rain", "drizzle", "thunderstorm"].includes(m)) body.classList.add("bg-rain");
-      else if (m === "snow") body.classList.add("bg-snow");
-      else if (["mist", "haze", "fog", "smoke"].includes(m)) body.classList.add("bg-mist");
-      else body.classList.add("bg-clouds");
-    }
-
-    // UPDATE UI
-    function updateUI(current, one) {
-      const { main, sys, name, weather, wind, dt, timezone } = current;
-      const cond = weather && weather.length ? weather[0] : { main: "Clouds", description: "Cloudy", icon: "03d" };
-
-      currentCity.textContent = name;
-      countryCodeEl.textContent = "Country: " + (sys.country || "--");
-      currentTemp.textContent = Math.round(main.temp) + "°C";
-      currentFeels.textContent = "Feels like " + Math.round(main.feels_like) + "°C";
-      currentDesc.textContent = cond.description;
-      currentIcon.src = "https://openweathermap.org/img/wn/" + cond.icon + "@4x.png";
-
-      localTimeEl.textContent = "Local time: " + formatFullTime(dt, timezone);
-sunriseEl.textContent = formatTime(sys.sunrise, timezone);
-sunsetEl.textContent  = formatTime(sys.sunset, timezone);
-
-      humidityEl.textContent = main.humidity + "%";
-      windEl.textContent = wind.speed + " km/h";
-      pressureEl.textContent = main.pressure + " hPa";
-      sunriseEl.textContent = formatTime(sys.sunrise, timezone);
-      sunsetEl.textContent = formatTime(sys.sunset, timezone);
-
-      setBackground(cond.main);
-      if (!one || !one.daily || !one.hourly) {
-  loadFakeForecast();
-}
-document.querySelector(".current").classList.add("pulse");
-setTimeout(() => {
-  document.querySelector(".current").classList.remove("pulse");
-}, 600);
-
-
-      // If API didn't return forecast, use fake data
-function loadFakeForecast() {
-  const fakeDays = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  const fakeTempMax = [29, 30, 31, 32, 33, 31, 30];
-  const fakeTempMin = [21, 22, 23, 24, 25, 24, 23];
-
-  // 7-Day Cards
-  dailyForecastEl.innerHTML = "";
-  fakeDays.forEach((d, i) => {
-    dailyForecastEl.innerHTML += `
-      <div class="forecast-card">
-        <p>${d}</p>
-        <img src="https://openweathermap.org/img/wn/02d.png" />
-        <p>${fakeTempMax[i]}° / ${fakeTempMin[i]}°</p>
-      </div>
-    `;
-  });
-
-  // Next 12 Hours
-  hourlyForecastEl.innerHTML = "";
-  for (let i = 1; i <= 12; i++) {
-    hourlyForecastEl.innerHTML += `
-      <div class="hour-card">
-        <p>${i}:00</p>
-        <img src="https://openweathermap.org/img/wn/04d.png" />
-        <p>${22 + i % 4}°C</p>
-      </div>
-    `;
-  }
-
-  // Graph
-  const ctx = document.getElementById("tempChart");
-  if (tempChart) tempChart.destroy();
-  tempChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: fakeDays,
-      datasets: [
-        { label: "Max °C", data: fakeTempMax, tension: 0.4 },
-        { label: "Min °C", data: fakeTempMin, tension: 0.4 },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-    },
-  });
-}
-
-
-      // 7-DAY FORECAST
-      if (one && one.daily) {
-        dailyForecastEl.innerHTML = "";
-        one.daily.slice(1, 8).forEach(day => {
-          const date = new Date((day.dt + one.timezone_offset) * 1000);
-          const weekday = date.toLocaleDateString("en-IN", { weekday: "short" });
-          dailyForecastEl.innerHTML += `
-            <div class="forecast-card">
-              <p>${weekday}</p>
-              <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}.png" alt="">
-              <p>${Math.round(day.temp.max)}° / ${Math.round(day.temp.min)}°</p>
-            </div>`;
-        });
-      }
-      
-
-      // NEXT 12 HOURS
-      if (one && one.hourly) {
-        hourlyForecastEl.innerHTML = "";
-        one.hourly.slice(0, 12).forEach(h => {
-          const t = formatTime(h.dt, one.timezone_offset);
-          hourlyForecastEl.innerHTML += `
-            <div class="hour-card">
-              <p>${t}</p>
-              <img src="https://openweathermap.org/img/wn/${h.weather[0].icon}.png" alt="">
-              <p>${Math.round(h.temp)}°C</p>
-            </div>`;
-        });
-      }
-
-      // CHART
-      if (one && one.daily) {
-        const labels = one.daily.slice(0, 7).map(d =>
-          new Date((d.dt + one.timezone_offset) * 1000).toLocaleDateString("en-IN", {
-            weekday: "short"
-          })
-        );
-        const maxTemps = one.daily.slice(0, 7).map(d => Math.round(d.temp.max));
-        const minTemps = one.daily.slice(0, 7).map(d => Math.round(d.temp.min));
-
-        const ctx = document.getElementById("tempChart");
-        if (tempChart) tempChart.destroy();
-
-        const color = getComputedStyle(document.body).color;
-
-        tempChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [
-              { label: "Max °C", data: maxTemps, tension: 0.4 },
-              { label: "Min °C", data: minTemps, tension: 0.4 },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                labels: {
-                  color: color,
-                },
-              },
-            },
-            scales: {
-              x: {
-                ticks: { color: color },
-                grid: { display: false },
-              },
-              y: {
-                ticks: { color: color },
-                grid: { color: "rgba(148,163,184,0.3)" },
-              },
-            },
-          },
-        });
-      }
-    }
-
-    // FETCH HELPERS
-    async function fetchCurrentByCity(city) {
-      const url = CURRENT_URL + "q=" + encodeURIComponent(city) + "&appid=" + API_KEY;
-      return fetch(url);
-    }
-
-    async function fetchCurrentByCoords(lat, lon) {
-      const url = CURRENT_URL + "lat=" + lat + "&lon=" + lon + "&appid=" + API_KEY;
-      return fetch(url);
-    }
-
-    async function fetchOneCall(lat, lon) {
-      const url = ONECALL_URL + "lat=" + lat + "&lon=" + lon + "&appid=" + API_KEY;
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error("OneCall failed");
-      }
-      return res.json();
-    }
-
-    async function loadWeather(fetchPromise) {
-      try {
-        showError(false);
-        showLoader(true);
-        const res = await fetchPromise;
-        if (!res.ok) {
-          showError(true, "❌ City not found");
-          return;
-        }
-        const currentData = await res.json();
-        let oneCallData = null;
-        try {
-          oneCallData = await fetchOneCall(currentData.coord.lat, currentData.coord.lon);
-        } catch (e) {
-          console.warn("OneCall error (forecast not available):", e);
-        }
-        updateUI(currentData, oneCallData);
-      } catch (err) {
-        console.error(err);
-        showError(true, "❌ Something went wrong");
-      } finally {
-        showLoader(false);
-      }
-    }
-
-    // EVENTS
-    searchBtn.addEventListener("click", () => {
-      const city = cityInput.value.trim();
-      if (!city) return;
-      loadWeather(fetchCurrentByCity(city));
-    });
-
-    cityInput.addEventListener("keyup", (e) => {
-      if (e.key === "Enter") {
-        searchBtn.click();
-      }
-    });
-
-    locBtn.addEventListener("click", () => {
-      if (!navigator.geolocation) {
-        showError(true, "📵 Geolocation not supported");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          loadWeather(fetchCurrentByCoords(pos.coords.latitude, pos.coords.longitude));
-        },
-        () => {
-          showError(true, "❌ Location permission denied");
-        }
-      );
-    });
-
-    // Default load: Delhi
-    loadWeather(fetchCurrentByCity("Delhi"));
-    
-  </script>
-  <script>
-/* ========== ADD-ON FEATURES (NO REMOVE) ========== */
-
-// 🎙️ Voice Search
-const voiceBtn = document.createElement("button");
-voiceBtn.className = "btn outline";
-voiceBtn.innerText = "🎙️";
-document.querySelector(".search-group").appendChild(voiceBtn);
-
-if ("webkitSpeechRecognition" in window) {
-  const rec = new webkitSpeechRecognition();
-  rec.lang = "en-IN";
-  voiceBtn.onclick = () => rec.start();
-  rec.onresult = e => {
-    const city = e.results[0][0].transcript;
-    cityInput.value = city;
-    loadWeather(fetchCurrentByCity(city));
-  };
-}
-</script>
-<script>
-// ⭐ Favorites
-const favBtn = document.createElement("button");
-favBtn.className = "btn ghost";
-favBtn.innerText = "⭐ Favorite";
-document.querySelector(".current").appendChild(favBtn);
-
-const favBox = document.createElement("div");
-document.querySelector(".current").appendChild(favBox);
-
-let favs = JSON.parse(localStorage.getItem("favs") || "[]");
-
-function renderFavs(){
-  favBox.innerHTML = "";
-  favs.forEach(c=>{
-    const b = document.createElement("button");
-    b.className = "btn ghost";
-    b.innerText = c;
-    b.onclick = ()=> loadWeather(fetchCurrentByCity(c));
-    favBox.appendChild(b);
-  });
-}
-renderFavs();
-
-favBtn.onclick = ()=>{
-  const c = currentCity.textContent;
-  if(c && c !== "City" && !favs.includes(c)){
-    favs.push(c);
-    localStorage.setItem("favs", JSON.stringify(favs));
-    renderFavs();
-  }
-};
-</script>
-<script>
-// 🔄 Auto refresh
-setInterval(()=>{
-  const c = currentCity.textContent;
-  if(c && c !== "City"){
-    loadWeather(fetchCurrentByCity(c));
-  }
-}, 300000);
-</script>
-
-  <script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
